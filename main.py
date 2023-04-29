@@ -1,21 +1,47 @@
-import os
-import telebot
+import telegram
+from telegram.ext import *
 
-API_KEY = os.getenv('API_KEY')
-bot = telebot.TeleBot(API_KEY)
+# Replace this with your actual token
+TOKEN = "6248388608:AAEbgV0xjJAklYveBCsXdA1SvwVrgfZklvs"
 
+# Store names in a list
+names = []
 
-@bot.message_handler(commands=['suggest_name'])
-def suggest_name(message):
-    bot.reply_to(message, "Please suggest a name for our new exective team:")
+# Define the handlers for the commands
+def start_command(update, context):
+    update.message.reply_text("Hello! Please suggest a name for the next executive team.")
 
+def batch_command(update, context):
+    update.message.reply_text("Please enter their batch.")
 
-@bot.message_handler(func=lambda message: True)
-def process_name_suggestion(message):
-    name_suggestion = message.text
-    bot.reply_to(
-        message, f"Thank you for suggesting the name '{name_suggestion}'.")
+def department_command(update, context):
+    update.message.reply_text("Please enter their department if known.")
 
+# Define the handler for messages
+def handle_message(update, context):
+    text = update.message.text.strip()
+    names.append(text)
+    update.message.reply_text("Name {} has been added to the list.".format(text))
 
-print('Starting bot...')
-bot.polling()
+def main():
+    updater = Updater(TOKEN, use_context=True)
+
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+
+    # Add the command handlers
+    dp.add_handler(CommandHandler('start', start_command))
+    dp.add_handler(CommandHandler('batch', batch_command))
+    dp.add_handler(CommandHandler('department', department_command))
+
+    # Add the message handler
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+
+    # Start the bot
+    updater.start_polling()
+
+    # Run the bot until you press Ctrl-C
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
